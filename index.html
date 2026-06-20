@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>動態薪資試算器｜含勞健保成本</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --success: #059669;
+      --success-soft: #ecfdf5;
+      --warning: #d97706;
+      --warning-soft: #fffbeb;
+      --danger: #dc2626;
+      --danger-soft: #fef2f2;
+      --dark: #111827;
+      --shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 42%, var(--bg) 100%);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 18px 48px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-end;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 5vw, 44px);
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .badge {
+      display: inline-flex;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: #1d4ed8;
+      font-weight: 800;
+      white-space: nowrap;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.94);
+      border: 1px solid rgba(229,231,235,0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 18px 20px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .card-header h2 {
+      margin: 0 0 4px;
+      font-size: 18px;
+    }
+
+    .card-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .card-body { padding: 18px 20px 20px; }
+
+    .field { margin-bottom: 18px; }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      font-weight: 850;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    label span {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      text-align: right;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 850;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    input[readonly] {
+      background: #f9fafb;
+      color: #374151;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary);
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: 1fr 92px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .current-count {
+      text-align: center;
+      padding: 12px 8px;
+      border-radius: 14px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 26px;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .current-count small {
+      display: block;
+      font-size: 12px;
+      margin-top: 6px;
+      opacity: 0.9;
+      font-weight: 750;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    details {
+      margin-top: 8px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fafafa;
+      overflow: hidden;
+    }
+
+    summary {
+      cursor: pointer;
+      padding: 13px 14px;
+      font-weight: 950;
+      color: #374151;
+    }
+
+    .details-body { padding: 0 14px 14px; }
+
+    .checkbox-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 13px 14px;
+      border-radius: 14px;
+      background: #f9fafb;
+      border: 1px solid var(--line);
+      margin-bottom: 18px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-box input {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      accent-color: var(--primary);
+    }
+
+    .checkbox-box strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .checkbox-box span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      min-height: 124px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .metric .name {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+
+    .metric .value {
+      margin-top: 12px;
+      font-size: clamp(21px, 2.3vw, 30px);
+      line-height: 1;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+    }
+
+    .metric .sub {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .metric.primary { background: #eff6ff; border-color: #bfdbfe; }
+    .metric.success { background: var(--success-soft); border-color: #a7f3d0; }
+    .metric.warning { background: var(--warning-soft); border-color: #fde68a; }
+    .metric.danger { background: var(--danger-soft); border-color: #fecaca; }
+    .metric.hidden { display: none; }
+
+    .note {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #f9fafb;
+      border: 1px solid var(--line);
+      color: #374151;
+      line-height: 1.7;
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+
+    .note strong { color: var(--text); }
+
+    .tier-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--dark);
+      color: #fff;
+      font-weight: 950;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .cost-breakdown {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .cost-item {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .cost-item .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      margin-bottom: 6px;
+    }
+
+    .cost-item .amount {
+      font-size: 19px;
+      font-weight: 950;
+      letter-spacing: -0.02em;
+    }
+
+    .chart-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      margin-bottom: 18px;
+    }
+
+    .chart-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+      color: #374151;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 16px;
+      height: 4px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    canvas {
+      width: 100%;
+      height: 280px;
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 14px;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+
+    th {
+      color: #374151;
+      background: #f9fafb;
+      font-size: 12px;
+    }
+
+    tr.active {
+      background: #eff6ff;
+      font-weight: 950;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 14px;
+      background: var(--dark);
+      color: #fff;
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: var(--dark);
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .hero { display: block; }
+      .badge { margin-top: 14px; }
+      .grid { grid-template-columns: 1fr; }
+      .result-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .app { padding: 20px 12px 36px; }
+      .result-grid, .cost-breakdown { grid-template-columns: 1fr; }
+      .mini-grid { grid-template-columns: 1fr; }
+      th, td { padding: 10px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <div>
+        <h1>動態薪資試算器</h1>
+        <p>
+          薪資抽成用帳面病患價格計算；實收業績固定用帳面價格 × 91%。<br>
+          勞健保預設採 36,300 級距，並計入公司實際人事成本。
+        </p>
+      </div>
+      <div class="badge">含勞健保｜36,300級距｜平均實收91%</div>
+    </section>
+
+    <section class="grid">
+      <aside class="card">
+        <div class="card-header">
+          <h2>輸入條件</h2>
+          <p>只要調整病患價格與人次，平均實收會自動用 91% 計算。</p>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label for="price">帳面單一病患價格 <span>薪資抽成用，例如：2000</span></label>
+            <input id="price" type="number" min="0" step="100" value="2000" />
+          </div>
+
+          <div class="field">
+            <label for="avgPrice">平均病患實收價格 <span>自動＝帳面價格 × 91%</span></label>
+            <input id="avgPrice" type="number" readonly value="1820" />
+          </div>
+
+          <div class="field">
+            <label for="count">當月人次 <span>0–200，可調整上限</span></label>
+            <div class="range-row">
+              <input id="count" type="range" min="0" max="200" step="1" value="80" />
+              <div class="current-count">
+                <span id="countDisplay">80</span>
+                <small>人次</small>
+              </div>
+            </div>
+            <input id="countNumber" type="number" min="0" max="200" step="1" value="80" style="margin-top: 10px;" />
+          </div>
+
+          <label class="checkbox-box" for="showEmployeeNet">
+            <input id="showEmployeeNet" type="checkbox" checked />
+            <div>
+              <strong>顯示員工實拿薪資</strong>
+              <span>預設勾選。員工實拿＝帳面薪資 − 員工勞健保自付額。</span>
+            </div>
+          </label>
+
+          <details open>
+            <summary>勞健保與勞退設定｜36,300 級距</summary>
+            <div class="details-body">
+              <div class="field">
+                <label for="insuredSalary">投保級距 <span>預設 36300</span></label>
+                <input id="insuredSalary" type="number" min="0" step="100" value="36300" />
+              </div>
+
+              <div class="mini-grid">
+                <div class="field">
+                  <label for="employeeLabor">員工勞保自付 <span>預設 908</span></label>
+                  <input id="employeeLabor" type="number" min="0" step="1" value="908" />
+                </div>
+                <div class="field">
+                  <label for="employeeHealth">員工健保自付 <span>預設 563</span></label>
+                  <input id="employeeHealth" type="number" min="0" step="1" value="563" />
+                </div>
+                <div class="field">
+                  <label for="employerLabor">雇主勞保負擔 <span>預設 3176</span></label>
+                  <input id="employerLabor" type="number" min="0" step="1" value="3176" />
+                </div>
+                <div class="field">
+                  <label for="employerHealth">雇主健保負擔 <span>預設 1757</span></label>
+                  <input id="employerHealth" type="number" min="0" step="1" value="1757" />
+                </div>
+                <div class="field">
+                  <label for="employerPension">雇主勞退提繳 <span>預設 2178</span></label>
+                  <input id="employerPension" type="number" min="0" step="1" value="2178" />
+                </div>
+                <div class="field">
+                  <label for="employerOther">其他雇主成本 <span>可填 0 或實際值</span></label>
+                  <input id="employerOther" type="number" min="0" step="1" value="0" />
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details>
+            <summary>薪資公式進階設定</summary>
+            <div class="details-body">
+              <div class="mini-grid">
+                <div class="field">
+                  <label for="baseSalary">底薪 <span>預設 35000</span></label>
+                  <input id="baseSalary" type="number" min="0" step="1000" value="35000" />
+                </div>
+                <div class="field">
+                  <label for="targetBonus">達標獎金 <span>預設 10000</span></label>
+                  <input id="targetBonus" type="number" min="0" step="1000" value="10000" />
+                </div>
+                <div class="field">
+                  <label for="targetCount">達標人次 <span>預設 60</span></label>
+                  <input id="targetCount" type="number" min="0" step="1" value="60" />
+                </div>
+                <div class="field">
+                  <label for="tierSize">每階人次 <span>預設 20</span></label>
+                  <input id="tierSize" type="number" min="1" step="1" value="20" />
+                </div>
+                <div class="field">
+                  <label for="commissionRate">基本抽成 % <span>預設 50%</span></label>
+                  <input id="commissionRate" type="number" min="0" max="100" step="1" value="50" />
+                </div>
+                <div class="field">
+                  <label for="tierIncrease">每階加給 <span>預設 +50</span></label>
+                  <input id="tierIncrease" type="number" min="0" step="10" value="50" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="maxCount">滑桿人次上限 <span>預設 200</span></label>
+                <input id="maxCount" type="number" min="60" step="10" value="200" />
+              </div>
+            </div>
+          </details>
+
+          <div class="button-row">
+            <button id="resetBtn" type="button" class="secondary">恢復預設</button>
+            <button id="copyBtn" type="button">複製目前結果</button>
+          </div>
+
+          <div class="footer">
+            平均實收價格＝帳面單價 × 91%。<br>
+            公司人事成本＝帳面薪資＋雇主勞保＋雇主健保＋雇主勞退＋其他雇主成本。
+          </div>
+        </div>
+      </aside>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>計算結果</h2>
+          <p id="summaryText">目前薪資試算結果</p>
+        </div>
+        <div class="card-body">
+          <div class="result-grid">
+            <div class="metric primary">
+              <div class="name">員工帳面薪資</div>
+              <div class="value" id="grossSalaryValue">$0</div>
+              <div class="sub" id="grossSalarySub">底薪＋達標獎金＋分段抽成</div>
+            </div>
+
+            <div class="metric success" id="employeeNetCard">
+              <div class="name">員工實拿薪資</div>
+              <div class="value" id="netSalaryValue">$0</div>
+              <div class="sub" id="netSalarySub">帳面薪資 − 員工自付額</div>
+            </div>
+
+            <div class="metric warning">
+              <div class="name">公司實際人事成本</div>
+              <div class="value" id="companyCostValue">$0</div>
+              <div class="sub" id="companyCostSub">帳面薪資＋雇主負擔</div>
+            </div>
+
+            <div class="metric danger">
+              <div class="name">公司成本占實收業績</div>
+              <div class="value" id="companyCostRatioValue">0%</div>
+              <div class="sub">含雇主勞健保、勞退後的真實成本比例</div>
+            </div>
+          </div>
+
+          <div class="cost-breakdown">
+            <div class="cost-item">
+              <div class="label">實收總業績</div>
+              <div class="amount" id="revenueValue">$0</div>
+            </div>
+            <div class="cost-item">
+              <div class="label">平均實收單價</div>
+              <div class="amount" id="avgPriceValue">$0</div>
+            </div>
+            <div class="cost-item">
+              <div class="label">員工自付額</div>
+              <div class="amount" id="employeeDeductionValue">$0</div>
+            </div>
+            <div class="cost-item">
+              <div class="label">雇主負擔</div>
+              <div class="amount" id="employerCostOnlyValue">$0</div>
+            </div>
+          </div>
+
+          <div class="note">
+            <div class="tier-chip" id="tierChip">目前級距</div>
+            <div id="tierDescription"></div>
+            <hr style="border:0;border-top:1px solid #e5e7eb;margin:12px 0;">
+            <strong>下一位病人增加員工帳面薪資：</strong>
+            <span id="nextPatientValue" style="font-size: 22px; font-weight: 950; margin-left: 8px;">$0</span>
+            <div id="nextPatientSub" style="color: var(--muted); margin-top: 4px;"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">
+              <span>帳面薪資與公司實際人事成本</span>
+              <div class="legend">
+                <span style="color:#2563eb;"><i></i>帳面薪資</span>
+                <span style="color:#d97706;"><i></i>公司成本</span>
+              </div>
+            </div>
+            <canvas id="salaryChart" width="900" height="340"></canvas>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>人次</th>
+                  <th>實收總業績</th>
+                  <th>帳面薪資</th>
+                  <th>員工實拿</th>
+                  <th>公司總成本</th>
+                  <th>成本占比</th>
+                </tr>
+              </thead>
+              <tbody id="salaryTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const inputs = {
+      price: $("price"),
+      avgPrice: $("avgPrice"),
+      count: $("count"),
+      countNumber: $("countNumber"),
+      showEmployeeNet: $("showEmployeeNet"),
+      insuredSalary: $("insuredSalary"),
+      employeeLabor: $("employeeLabor"),
+      employeeHealth: $("employeeHealth"),
+      employerLabor: $("employerLabor"),
+      employerHealth: $("employerHealth"),
+      employerPension: $("employerPension"),
+      employerOther: $("employerOther"),
+      baseSalary: $("baseSalary"),
+      targetBonus: $("targetBonus"),
+      targetCount: $("targetCount"),
+      tierSize: $("tierSize"),
+      commissionRate: $("commissionRate"),
+      tierIncrease: $("tierIncrease"),
+      maxCount: $("maxCount")
+    };
+
+    const outputs = {
+      countDisplay: $("countDisplay"),
+      summaryText: $("summaryText"),
+      grossSalaryValue: $("grossSalaryValue"),
+      grossSalarySub: $("grossSalarySub"),
+      employeeNetCard: $("employeeNetCard"),
+      netSalaryValue: $("netSalaryValue"),
+      netSalarySub: $("netSalarySub"),
+      companyCostValue: $("companyCostValue"),
+      companyCostSub: $("companyCostSub"),
+      companyCostRatioValue: $("companyCostRatioValue"),
+      revenueValue: $("revenueValue"),
+      avgPriceValue: $("avgPriceValue"),
+      employeeDeductionValue: $("employeeDeductionValue"),
+      employerCostOnlyValue: $("employerCostOnlyValue"),
+      tierChip: $("tierChip"),
+      tierDescription: $("tierDescription"),
+      nextPatientValue: $("nextPatientValue"),
+      nextPatientSub: $("nextPatientSub"),
+      salaryTable: $("salaryTable")
+    };
+
+    function num(value, fallback = 0) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : fallback;
+    }
+
+    function money(value) {
+      return Math.round(value).toLocaleString("zh-TW", {
+        style: "currency",
+        currency: "TWD",
+        maximumFractionDigits: 0
+      });
+    }
+
+    function percent(value) {
+      if (!Number.isFinite(value)) return "0%";
+      return (value * 100).toFixed(1) + "%";
+    }
+
+    function getConfig() {
+      const price = Math.max(0, num(inputs.price.value));
+      const avgPrice = Math.round(price * 0.91);
+      inputs.avgPrice.value = avgPrice;
+
+      return {
+        price,
+        avgPrice,
+        count: Math.max(0, Math.round(num(inputs.countNumber.value))),
+        showEmployeeNet: inputs.showEmployeeNet.checked,
+        insuredSalary: Math.max(0, num(inputs.insuredSalary.value)),
+        employeeLabor: Math.max(0, num(inputs.employeeLabor.value)),
+        employeeHealth: Math.max(0, num(inputs.employeeHealth.value)),
+        employerLabor: Math.max(0, num(inputs.employerLabor.value)),
+        employerHealth: Math.max(0, num(inputs.employerHealth.value)),
+        employerPension: Math.max(0, num(inputs.employerPension.value)),
+        employerOther: Math.max(0, num(inputs.employerOther.value)),
+        baseSalary: Math.max(0, num(inputs.baseSalary.value)),
+        targetBonus: Math.max(0, num(inputs.targetBonus.value)),
+        targetCount: Math.max(0, Math.round(num(inputs.targetCount.value))),
+        tierSize: Math.max(1, Math.round(num(inputs.tierSize.value, 20))),
+        commissionRate: Math.max(0, num(inputs.commissionRate.value, 50)) / 100,
+        tierIncrease: Math.max(0, num(inputs.tierIncrease.value, 50)),
+        maxCount: Math.max(60, Math.round(num(inputs.maxCount.value, 200)))
+      };
+    }
+
+    function getInsuranceCost(config) {
+      const employeeDeduction = config.employeeLabor + config.employeeHealth;
+      const employerCost = config.employerLabor + config.employerHealth + config.employerPension + config.employerOther;
+
+      return { employeeDeduction, employerCost };
+    }
+
+    function extraPayForNthExtraPatient(extraIndex, config) {
+      const tierIndex = Math.floor((extraIndex - 1) / config.tierSize);
+      return config.price * config.commissionRate + tierIndex * config.tierIncrease;
+    }
+
+    function calculateSalary(patientCount, config) {
+      let targetBonus = 0;
+      let extraCommission = 0;
+
+      if (patientCount >= config.targetCount) {
+        targetBonus = config.targetBonus;
+        const extraPatients = patientCount - config.targetCount;
+        for (let i = 1; i <= extraPatients; i++) {
+          extraCommission += extraPayForNthExtraPatient(i, config);
+        }
+      }
+
+      const grossSalary = config.baseSalary + targetBonus + extraCommission;
+      const revenue = patientCount * config.avgPrice;
+      const insurance = getInsuranceCost(config);
+      const netSalary = Math.max(0, grossSalary - insurance.employeeDeduction);
+      const companyCost = grossSalary + insurance.employerCost;
+
+      return {
+        grossSalary,
+        revenue,
+        targetBonus,
+        extraCommission,
+        variablePay: targetBonus + extraCommission,
+        employeeDeduction: insurance.employeeDeduction,
+        employerCost: insurance.employerCost,
+        netSalary,
+        companyCost
+      };
+    }
+
+    function getTierInfo(patientCount, config) {
+      if (patientCount < config.targetCount) {
+        return {
+          title: "未達標",
+          description: `目前 ${patientCount} 人次，未達 ${config.targetCount} 人次。員工帳面薪資為底薪 ${money(config.baseSalary)}；公司端另加雇主負擔 ${money(getInsuranceCost(config).employerCost)}。`,
+          nextPay: patientCount + 1 === config.targetCount ? config.targetBonus : 0,
+          nextText: patientCount + 1 === config.targetCount
+            ? `下一人次達標，帳面薪資增加達標獎金 ${money(config.targetBonus)}。`
+            : "未達標前，新增人次不增加帳面薪資。"
+        };
+      }
+
+      if (patientCount === config.targetCount) {
+        const nextExtraPay = extraPayForNthExtraPatient(1, config);
+        return {
+          title: "剛達標",
+          description: `目前達 ${config.targetCount} 人次，帳面薪資為底薪 ${money(config.baseSalary)}＋達標獎金 ${money(config.targetBonus)}。`,
+          nextPay: nextExtraPay,
+          nextText: `下一人次進入第 1 階，每多 1 人增加帳面薪資 ${money(nextExtraPay)}。`
+        };
+      }
+
+      const extraPatients = patientCount - config.targetCount;
+      const tierIndex = Math.floor((extraPatients - 1) / config.tierSize);
+      const tierStart = config.targetCount + tierIndex * config.tierSize + 1;
+      const tierEnd = config.targetCount + (tierIndex + 1) * config.tierSize;
+      const currentPay = config.price * config.commissionRate + tierIndex * config.tierIncrease;
+
+      const nextExtraIndex = extraPatients + 1;
+      const nextPay = extraPayForNthExtraPatient(nextExtraIndex, config);
+      const nextTierIndex = Math.floor((nextExtraIndex - 1) / config.tierSize);
+
+      return {
+        title: `第 ${tierIndex + 1} 階`,
+        description: `
+          目前在 ${tierStart}–${tierEnd} 人次級距。<br>
+          這一階每多 1 人次增加帳面薪資：${money(config.price)} × ${(config.commissionRate * 100).toFixed(0)}% ＋ ${money(tierIndex * config.tierIncrease)}
+          ＝ <strong>${money(currentPay)}</strong>。<br>
+          實收單價固定用 ${money(config.avgPrice)}，也就是帳面價格的 91%。
+        `,
+        nextPay,
+        nextText: nextTierIndex > tierIndex
+          ? `下一人次進入第 ${nextTierIndex + 1} 階，單人加給提高為 ${money(nextPay)}。`
+          : `下一人次仍在第 ${tierIndex + 1} 階，增加帳面薪資 ${money(nextPay)}。`
+      };
+    }
+
+    function updateTable(config) {
+      const selected = config.count;
+      const importantCounts = new Set([
+        0,
+        Math.max(0, config.targetCount - 1),
+        config.targetCount,
+        config.targetCount + 1,
+        config.targetCount + 20,
+        config.targetCount + 21,
+        config.targetCount + 40,
+        config.targetCount + 41,
+        config.targetCount + 60,
+        selected
+      ]);
+
+      const counts = [...importantCounts]
+        .filter((n) => n >= 0 && n <= config.maxCount)
+        .sort((a, b) => a - b);
+
+      outputs.salaryTable.innerHTML = counts.map((n) => {
+        const result = calculateSalary(n, config);
+        const companyRatio = result.revenue > 0 ? result.companyCost / result.revenue : 0;
+
+        return `
+          <tr class="${n === selected ? "active" : ""}">
+            <td>${n} 人</td>
+            <td>${money(result.revenue)}</td>
+            <td>${money(result.grossSalary)}</td>
+            <td>${config.showEmployeeNet ? money(result.netSalary) : "—"}</td>
+            <td>${money(result.companyCost)}</td>
+            <td>${percent(companyRatio)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function drawChart(config) {
+      const canvas = $("salaryChart");
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const padding = { left: 74, right: 22, top: 24, bottom: 50 };
+      const maxX = config.maxCount;
+      const data = [];
+
+      for (let n = 0; n <= maxX; n++) {
+        const result = calculateSalary(n, config);
+        data.push({
+          n,
+          grossSalary: result.grossSalary,
+          companyCost: result.companyCost
+        });
+      }
+
+      const maxY = Math.max(...data.map(d => Math.max(d.grossSalary, d.companyCost)), 1) * 1.08;
+
+      function x(n) {
+        return padding.left + (n / maxX) * (w - padding.left - padding.right);
+      }
+
+      function y(value) {
+        return h - padding.bottom - (value / maxY) * (h - padding.top - padding.bottom);
+      }
+
+      ctx.strokeStyle = "#e5e7eb";
+      ctx.lineWidth = 1;
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "14px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+
+      const yTicks = 4;
+      for (let i = 0; i <= yTicks; i++) {
+        const value = (maxY / yTicks) * i;
+        const yy = y(value);
+        ctx.beginPath();
+        ctx.moveTo(padding.left, yy);
+        ctx.lineTo(w - padding.right, yy);
+        ctx.stroke();
+        ctx.fillText(Math.round(value / 1000) + "k", 16, yy + 5);
+      }
+
+      const xTicks = 5;
+      for (let i = 0; i <= xTicks; i++) {
+        const value = Math.round((maxX / xTicks) * i);
+        const xx = x(value);
+        ctx.fillText(String(value), xx - 8, h - 18);
+      }
+
+      ctx.fillStyle = "#374151";
+      ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillText("金額", 16, 24);
+      ctx.fillText("人次", w - 56, h - 18);
+
+      const targetX = x(config.targetCount);
+      ctx.strokeStyle = "#f59e0b";
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(targetX, padding.top);
+      ctx.lineTo(targetX, h - padding.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#92400e";
+      ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      ctx.fillText("達標", targetX + 6, padding.top + 18);
+
+      drawLine(ctx, data, x, y, "grossSalary", "#2563eb", 4);
+      drawLine(ctx, data, x, y, "companyCost", "#d97706", 4);
+
+      const selectedResult = calculateSalary(config.count, config);
+      const selectedX = x(config.count);
+      const selectedY = y(selectedResult.companyCost);
+
+      ctx.fillStyle = "#111827";
+      ctx.beginPath();
+      ctx.arc(selectedX, selectedY, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#111827";
+      ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      const label = `${config.count}人｜公司成本 ${money(selectedResult.companyCost)}`;
+      const labelWidth = ctx.measureText(label).width + 18;
+      let labelX = selectedX + 12;
+      if (labelX + labelWidth > w - padding.right) labelX = selectedX - labelWidth - 12;
+      const labelY = Math.max(34, selectedY - 34);
+
+      ctx.fillStyle = "#111827";
+      roundRect(ctx, labelX, labelY - 22, labelWidth, 30, 9);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(label, labelX + 9, labelY - 2);
+    }
+
+    function drawLine(ctx, data, x, y, key, color, width) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      data.forEach((d, index) => {
+        const xx = x(d.n);
+        const yy = y(d[key]);
+        if (index === 0) ctx.moveTo(xx, yy);
+        else ctx.lineTo(xx, yy);
+      });
+      ctx.stroke();
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    function update() {
+      const config = getConfig();
+
+      inputs.count.max = config.maxCount;
+      inputs.countNumber.max = config.maxCount;
+
+      if (config.count > config.maxCount) {
+        inputs.countNumber.value = config.maxCount;
+        inputs.count.value = config.maxCount;
+        config.count = config.maxCount;
+      }
+
+      inputs.count.value = config.count;
+      outputs.countDisplay.textContent = config.count;
+
+      const result = calculateSalary(config.count, config);
+      const companyCostRatio = result.revenue > 0 ? result.companyCost / result.revenue : 0;
+      const tier = getTierInfo(config.count, config);
+
+      outputs.employeeNetCard.classList.toggle("hidden", !config.showEmployeeNet);
+
+      outputs.grossSalaryValue.textContent = money(result.grossSalary);
+      outputs.netSalaryValue.textContent = money(result.netSalary);
+      outputs.companyCostValue.textContent = money(result.companyCost);
+      outputs.companyCostRatioValue.textContent = percent(companyCostRatio);
+
+      outputs.revenueValue.textContent = money(result.revenue);
+      outputs.avgPriceValue.textContent = money(config.avgPrice);
+      outputs.employeeDeductionValue.textContent = money(result.employeeDeduction);
+      outputs.employerCostOnlyValue.textContent = money(result.employerCost);
+
+      outputs.grossSalarySub.textContent =
+        `底薪 ${money(config.baseSalary)}＋達標獎金 ${money(result.targetBonus)}＋分段抽成 ${money(result.extraCommission)}`;
+
+      outputs.netSalarySub.textContent =
+        `帳面薪資 ${money(result.grossSalary)} − 員工自付 ${money(result.employeeDeduction)}`;
+
+      outputs.companyCostSub.textContent =
+        `帳面薪資 ${money(result.grossSalary)}＋雇主負擔 ${money(result.employerCost)}`;
+
+      outputs.summaryText.textContent =
+        `${config.count} 人次｜帳面單價 ${money(config.price)}｜平均實收 ${money(config.avgPrice)}｜公司成本占實收業績 ${percent(companyCostRatio)}`;
+
+      outputs.tierChip.textContent = tier.title;
+      outputs.tierDescription.innerHTML = tier.description;
+      outputs.nextPatientValue.textContent = money(tier.nextPay);
+      outputs.nextPatientSub.textContent = tier.nextText;
+
+      updateTable(config);
+      drawChart(config);
+    }
+
+    inputs.count.addEventListener("input", () => {
+      inputs.countNumber.value = inputs.count.value;
+      update();
+    });
+
+    Object.values(inputs).forEach((input) => {
+      if (input.id !== "count") {
+        input.addEventListener("input", update);
+        input.addEventListener("change", update);
+      }
+    });
+
+    $("resetBtn").addEventListener("click", () => {
+      inputs.price.value = 2000;
+      inputs.avgPrice.value = 1820;
+      inputs.count.value = 80;
+      inputs.countNumber.value = 80;
+      inputs.showEmployeeNet.checked = true;
+      inputs.insuredSalary.value = 36300;
+      inputs.employeeLabor.value = 908;
+      inputs.employeeHealth.value = 563;
+      inputs.employerLabor.value = 3176;
+      inputs.employerHealth.value = 1757;
+      inputs.employerPension.value = 2178;
+      inputs.employerOther.value = 0;
+      inputs.baseSalary.value = 35000;
+      inputs.targetBonus.value = 10000;
+      inputs.targetCount.value = 60;
+      inputs.tierSize.value = 20;
+      inputs.commissionRate.value = 50;
+      inputs.tierIncrease.value = 50;
+      inputs.maxCount.value = 200;
+      update();
+    });
+
+    $("copyBtn").addEventListener("click", async () => {
+      const config = getConfig();
+      const result = calculateSalary(config.count, config);
+      const companyCostRatio = result.revenue > 0 ? result.companyCost / result.revenue : 0;
+
+      const text = [
+        "動態薪資試算結果｜含勞健保成本",
+        `人次：${config.count}`,
+        `帳面單一病患價格：${money(config.price)}`,
+        `平均實收單價：${money(config.avgPrice)}（帳面價格 × 91%）`,
+        `實收總業績：${money(result.revenue)}`,
+        `員工帳面薪資：${money(result.grossSalary)}`,
+        `員工自付額：${money(result.employeeDeduction)}`,
+        `員工實拿薪資：${money(result.netSalary)}`,
+        `雇主負擔：${money(result.employerCost)}`,
+        `公司實際人事成本：${money(result.companyCost)}`,
+        `公司成本占實收業績：${percent(companyCostRatio)}`,
+        `投保級距：${money(config.insuredSalary)}`
+      ].join("\n");
+
+      try {
+        await navigator.clipboard.writeText(text);
+        $("copyBtn").textContent = "已複製";
+        setTimeout(() => $("copyBtn").textContent = "複製目前結果", 1200);
+      } catch (error) {
+        alert(text);
+      }
+    });
+
+    update();
+  </script>
+</body>
+</html>
