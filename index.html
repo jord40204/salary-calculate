@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>動態薪資試算器｜36300級距｜平均實收可調</title>
+  <title>動態薪資試算器｜時數比例滑桿版</title>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -503,17 +503,17 @@
         <h1>動態薪資試算器</h1>
         <p>
           薪資抽成用帳面單價計算，平均實收預設帶入帳面單價的 91%，也可以手動修改。<br>
-          勞健保預設使用 36,300 投保級距；公司端成本會自動加上雇主勞健保與勞退負擔。
+          可用滑桿調整總時數比例 0.6–1.0；底薪、達標人次與每階級距會依比例降低，達標獎金與抽成率維持原規則。
         </p>
       </div>
-      <div class="badge">36,300級距｜平均實收可調｜公司真實人事成本</div>
+      <div class="badge">時數比例滑桿｜0.6–1.0｜抽成規則不打折</div>
     </section>
 
     <section class="grid">
       <aside class="card">
         <div class="card-header">
           <h2>輸入條件</h2>
-          <p>帳面單價用來算薪資抽成；平均實收預設為 91%，但可以手動修改。</p>
+          <p>帳面單價用來算薪資抽成；時數比例只降低底薪、達標人次與每階級距，達標獎金與抽成率不打折。</p>
         </div>
         <div class="card-body">
           <div class="field">
@@ -542,7 +542,34 @@
             <input id="countNumber" type="number" min="0" max="200" step="1" value="80" style="margin-top: 10px;" />
           </div>
 
-          <label class="checkbox-box" for="showEmployeeNet">
+          <div class="field">
+            <label for="workRatioSlider">總時數比例 <span>滑桿範圍 0.6–1.0</span></label>
+            <div class="ratio-slider-card">
+              <div class="ratio-slider-top">
+                <div>
+                  <strong>目前時數比例</strong>
+                  <div style="color: var(--muted); font-size: 12px; margin-top: 4px;">只影響底薪、達標人次與每階級距</div>
+                </div>
+                <div class="ratio-slider-value">
+                  <span id="workRatioDisplay">1.00</span>
+                  <small>倍</small>
+                </div>
+              </div>
+              <input id="workRatioSlider" type="range" min="0.6" max="1" step="0.01" value="1" />
+              <div class="ratio-scale">
+                <span>0.6</span>
+                <span>0.7</span>
+                <span>0.8</span>
+                <span>0.9</span>
+                <span>1.0</span>
+              </div>
+            </div>
+            <div class="ratio-summary" id="workRatioSummary">
+              目前為 1 倍規則：底薪 35,000、達標 60 人、每階 20 人；達標獎金 10,000 與抽成規則固定。
+            </div>
+          </div>
+
+                    <label class="checkbox-box" for="showEmployeeNet">
             <input id="showEmployeeNet" type="checkbox" checked />
             <div>
               <strong>顯示員工實拿薪資</strong>
@@ -631,7 +658,7 @@
 
           <div class="footer">
             公式：平均實收價格預設＝帳面單價 × 91%，但可以手動覆蓋。<br>
-            員工實拿＝帳面薪資 − 員工勞健保自付額。<br>
+            時數比例滑桿範圍固定 0.6–1.0；只縮放底薪、達標人次、每階人次；達標獎金、抽成率與每階加給維持原設定。<br>
             公司總人事成本＝帳面薪資 ＋ 雇主勞保 ＋ 雇主健保 ＋ 勞退 ＋ 其他雇主成本。
           </div>
         </div>
@@ -666,6 +693,12 @@
               <div class="name">公司總人事成本占比</div>
               <div class="value" id="companyCostRatioValue">0%</div>
               <div class="sub">公司總人事成本 ÷ 實收總業績</div>
+            </div>
+
+            <div class="metric purple">
+              <div class="name">目前時數比例</div>
+              <div class="value" id="workRatioValue">1.0</div>
+              <div class="sub" id="workRatioMetricSub">達標人次 60｜底薪 NT$35,000</div>
             </div>
 
                       </div>
@@ -739,6 +772,7 @@
       price: $("price"),
       avgPrice: $("avgPrice"),
       count: $("count"),
+      workRatioSlider: $("workRatioSlider"),
       countNumber: $("countNumber"),
       showEmployeeNet: $("showEmployeeNet"),
       insuredSalary: $("insuredSalary"),
@@ -761,6 +795,10 @@
       countDisplay: $("countDisplay"),
       summaryText: $("summaryText"),
       avgPriceHint: $("avgPriceHint"),
+      workRatioDisplay: $("workRatioDisplay"),
+      workRatioSummary: $("workRatioSummary"),
+      workRatioValue: $("workRatioValue"),
+      workRatioMetricSub: $("workRatioMetricSub"),
       grossSalaryValue: $("grossSalaryValue"),
       grossSalarySub: $("grossSalarySub"),
       employeeNetCard: $("employeeNetCard"),
@@ -807,6 +845,15 @@
     }
 
     function getConfig() {
+      const ratio = Math.max(0.6, Math.min(1, num(inputs.workRatioSlider.value, 1)));
+
+      const originalBaseSalary = Math.max(0, num(inputs.baseSalary.value));
+      const originalTargetBonus = Math.max(0, num(inputs.targetBonus.value));
+      const originalTargetCount = Math.max(0, Math.round(num(inputs.targetCount.value)));
+      const originalTierSize = Math.max(1, Math.round(num(inputs.tierSize.value, 20)));
+      const originalTierIncrease = Math.max(0, num(inputs.tierIncrease.value, 50));
+      const originalCommissionRate = Math.max(0, num(inputs.commissionRate.value, 50)) / 100;
+
       return {
         price: Math.max(0, num(inputs.price.value)),
         avgPrice: Math.max(0, num(inputs.avgPrice.value)),
@@ -819,12 +866,23 @@
         employerHealth: Math.max(0, num(inputs.employerHealth.value)),
         employerPension: Math.max(0, num(inputs.employerPension.value)),
         employerOccupational: Math.max(0, num(inputs.employerOccupational.value)),
-        baseSalary: Math.max(0, num(inputs.baseSalary.value)),
-        targetBonus: Math.max(0, num(inputs.targetBonus.value)),
-        targetCount: Math.max(0, Math.round(num(inputs.targetCount.value))),
-        tierSize: Math.max(1, Math.round(num(inputs.tierSize.value, 20))),
-        commissionRate: Math.max(0, num(inputs.commissionRate.value, 50)) / 100,
-        tierIncrease: Math.max(0, num(inputs.tierIncrease.value, 50)),
+
+        workRatio: ratio,
+
+        originalBaseSalary,
+        originalTargetBonus,
+        originalTargetCount,
+        originalTierSize,
+        originalCommissionRate,
+        originalTierIncrease,
+
+        baseSalary: Math.round(originalBaseSalary * ratio),
+        targetBonus: originalTargetBonus,
+        targetCount: Math.max(1, Math.round(originalTargetCount * ratio)),
+        tierSize: Math.max(1, Math.round(originalTierSize * ratio)),
+        commissionRate: originalCommissionRate,
+        tierIncrease: originalTierIncrease,
+
         maxCount: Math.max(60, Math.round(num(inputs.maxCount.value, 200)))
       };
     }
@@ -911,8 +969,9 @@
         title: `第 ${tierIndex + 1} 階`,
         description: `
           目前在 ${tierStart}–${tierEnd} 人次級距。<br>
-          這一階每多 1 人次增加帳面薪資：${money(config.price)} × ${(config.commissionRate * 100).toFixed(0)}% ＋ ${money(tierIndex * config.tierIncrease)}
+          這一階每多 1 人次增加帳面薪資：${money(config.price)} × ${(config.commissionRate * 100).toFixed(1)}% ＋ ${money(tierIndex * config.tierIncrease)}
           ＝ <strong>${money(currentPay)}</strong>。<br>
+          目前時數比例 ${config.workRatio}，只調整底薪、達標人次與每階級距；抽成率維持 ${(config.commissionRate * 100).toFixed(1)}%，每階加給維持 ${money(config.tierIncrease)}。<br>
           注意：公司端另加固定雇主負擔 ${money(getInsuranceCost(config).employerCost)}。
         `,
         nextPay,
@@ -1111,6 +1170,7 @@
       outputs.revenueValue.textContent = money(result.revenue);
 
       outputs.companyCostRatioValue.textContent = percent(companyCostRatio);
+      outputs.workRatioDisplay.textContent = config.workRatio.toFixed(2);
 
       const avgRatio = config.price > 0 ? config.avgPrice / config.price : 0;
       outputs.avgPriceHint.textContent =
@@ -1130,7 +1190,20 @@
         `帳面薪資 ${money(result.grossSalary)}＋雇主負擔 ${money(result.employerCost)}`;
 
       outputs.summaryText.textContent =
-        `${config.count} 人次｜帳面單價 ${money(config.price)}｜平均實收 ${money(config.avgPrice)}｜公司總人事成本 ${money(result.companyCost)}，占實收總業績 ${percent(companyCostRatio)}。`;
+        `${config.count} 人次｜時數比例 ${config.workRatio}｜帳面單價 ${money(config.price)}｜平均實收 ${money(config.avgPrice)}｜公司總人事成本 ${money(result.companyCost)}，占實收總業績 ${percent(companyCostRatio)}。`;
+
+      outputs.workRatioValue.textContent = config.workRatio.toFixed(1);
+      outputs.workRatioMetricSub.textContent =
+        `達標人次 ${config.targetCount}｜底薪 ${money(config.baseSalary)}｜獎金固定 ${money(config.targetBonus)}`;
+
+      outputs.workRatioSummary.innerHTML =
+        `目前為 <strong>${config.workRatio.toFixed(1)}</strong> 倍規則：
+         底薪 ${money(config.originalBaseSalary)} → <strong>${money(config.baseSalary)}</strong>，
+         達標人次 ${config.originalTargetCount} → <strong>${config.targetCount}</strong>，
+         每階 ${config.originalTierSize} 人 → <strong>${config.tierSize}</strong> 人。<br>
+         <strong>達標獎金固定 ${money(config.targetBonus)}</strong>，
+         <strong>抽成率固定 ${(config.commissionRate * 100).toFixed(0)}%</strong>，
+         <strong>每階加給固定 ${money(config.tierIncrease)}</strong>。`;
 
       outputs.tierChip.textContent = tier.title;
       outputs.tierDescription.innerHTML = tier.description;
@@ -1163,13 +1236,14 @@
     });
 
     Object.values(inputs).forEach((input) => {
-      if (!["count", "price", "avgPrice"].includes(input.id)) {
+      if (!["count", "price", "avgPrice", "workRatioSlider"].includes(input.id)) {
         input.addEventListener("input", update);
         input.addEventListener("change", update);
       }
     });
 
     $("resetBtn").addEventListener("click", () => {
+      inputs.workRatioSlider.value = 1;
       inputs.price.value = 2000;
       inputs.avgPrice.value = 1820;
       inputs.count.value = 80;
@@ -1200,7 +1274,14 @@
 
       const text = [
         "動態薪資試算結果｜36300級距｜平均實收可調",
+        `時數比例：${config.workRatio}`,
         `人次：${config.count}`,
+        `有效達標人次：${config.targetCount}`,
+        `有效底薪：${money(config.baseSalary)}`,
+        `達標獎金固定：${money(config.targetBonus)}`,
+        `抽成率固定：${(config.commissionRate * 100).toFixed(1)}%`,
+        `每階加給固定：${money(config.tierIncrease)}`,
+        `有效每階人次：${config.tierSize}`,
         `帳面單一病人價格：${money(config.price)}`,
         `平均病患實收價格：${money(config.avgPrice)}（目前約為帳面單價的 ${percent(config.price > 0 ? config.avgPrice / config.price : 0)}）`,
         `帳面總額：${money(config.count * config.price)}`,
@@ -1223,6 +1304,9 @@
       }
     });
 
+
+
+    inputs.workRatioSlider.addEventListener("input", update);
 
     $("resetAvgPriceBtn").addEventListener("click", () => {
       applyDefaultAvgPrice();
