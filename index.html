@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>動態薪資試算器｜含勞健保成本</title>
+  <title>動態薪資試算器｜36300級距｜平均實收可調</title>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -19,6 +20,8 @@
       --warning-soft: #fffbeb;
       --danger: #dc2626;
       --danger-soft: #fef2f2;
+      --purple: #7c3aed;
+      --purple-soft: #f5f3ff;
       --dark: #111827;
       --shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
       --radius: 18px;
@@ -34,7 +37,7 @@
     }
 
     .app {
-      max-width: 1180px;
+      max-width: 1240px;
       margin: 0 auto;
       padding: 28px 18px 48px;
     }
@@ -63,6 +66,8 @@
 
     .badge {
       display: inline-flex;
+      align-items: center;
+      gap: 8px;
       padding: 9px 12px;
       border-radius: 999px;
       background: var(--primary-soft);
@@ -143,11 +148,6 @@
       box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
     }
 
-    input[readonly] {
-      background: #f9fafb;
-      color: #374151;
-    }
-
     input[type="range"] {
       width: 100%;
       accent-color: var(--primary);
@@ -201,6 +201,31 @@
     }
 
     .details-body { padding: 0 14px 14px; }
+
+
+    .auto-box {
+      width: 100%;
+      padding: 14px 15px;
+      border: 1px solid #bfdbfe;
+      border-radius: 14px;
+      background: #eff6ff;
+    }
+
+    .auto-box strong {
+      display: block;
+      font-size: 24px;
+      font-weight: 950;
+      letter-spacing: -0.03em;
+      color: #1d4ed8;
+      margin-bottom: 4px;
+    }
+
+    .auto-box span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
 
     .checkbox-box {
       display: flex;
@@ -279,7 +304,16 @@
     .metric.success { background: var(--success-soft); border-color: #a7f3d0; }
     .metric.warning { background: var(--warning-soft); border-color: #fde68a; }
     .metric.danger { background: var(--danger-soft); border-color: #fecaca; }
+    .metric.purple { background: var(--purple-soft); border-color: #ddd6fe; }
+
     .metric.hidden { display: none; }
+
+    .rule-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
 
     .note {
       padding: 14px 16px;
@@ -289,7 +323,6 @@
       color: #374151;
       line-height: 1.7;
       font-size: 14px;
-      margin-bottom: 18px;
     }
 
     .note strong { color: var(--text); }
@@ -328,7 +361,7 @@
     }
 
     .cost-item .amount {
-      font-size: 19px;
+      font-size: 20px;
       font-weight: 950;
       letter-spacing: -0.02em;
     }
@@ -452,6 +485,7 @@
       .badge { margin-top: 14px; }
       .grid { grid-template-columns: 1fr; }
       .result-grid { grid-template-columns: 1fr 1fr; }
+      .rule-box { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 640px) {
@@ -468,28 +502,32 @@
       <div>
         <h1>動態薪資試算器</h1>
         <p>
-          薪資抽成用帳面病患價格計算；實收業績固定用帳面價格 × 91%。<br>
-          勞健保預設採 36,300 級距，並計入公司實際人事成本。
+          薪資抽成用帳面單價計算，平均實收預設帶入帳面單價的 91%，也可以手動修改。<br>
+          勞健保預設使用 36,300 投保級距；公司端成本會自動加上雇主勞健保與勞退負擔。
         </p>
       </div>
-      <div class="badge">含勞健保｜36,300級距｜平均實收91%</div>
+      <div class="badge">36,300級距｜平均實收可調｜公司真實人事成本</div>
     </section>
 
     <section class="grid">
       <aside class="card">
         <div class="card-header">
           <h2>輸入條件</h2>
-          <p>只要調整病患價格與人次，平均實收會自動用 91% 計算。</p>
+          <p>帳面單價用來算薪資抽成；平均實收預設為 91%，但可以手動修改。</p>
         </div>
         <div class="card-body">
           <div class="field">
-            <label for="price">帳面單一病患價格 <span>薪資抽成用，例如：2000</span></label>
+            <label for="price">帳面單一病人價格 <span>薪資抽成用，例如：2000</span></label>
             <input id="price" type="number" min="0" step="100" value="2000" />
           </div>
 
           <div class="field">
-            <label for="avgPrice">平均病患實收價格 <span>自動＝帳面價格 × 91%</span></label>
-            <input id="avgPrice" type="number" readonly value="1820" />
+            <label for="avgPrice">平均病患實收價格 <span>預設＝帳面單價 × 91%，可手動改</span></label>
+            <input id="avgPrice" type="number" min="0" step="10" value="1820" />
+            <div class="helper-row">
+              <span id="avgPriceHint">目前約為帳面單價的 91.0%</span>
+              <button id="resetAvgPriceBtn" type="button" class="tiny-button">套用91%</button>
+            </div>
           </div>
 
           <div class="field">
@@ -508,15 +546,15 @@
             <input id="showEmployeeNet" type="checkbox" checked />
             <div>
               <strong>顯示員工實拿薪資</strong>
-              <span>預設勾選。員工實拿＝帳面薪資 − 員工勞健保自付額。</span>
+              <span>勾選後會顯示「帳面薪資 − 員工勞健保自付額」。不論是否顯示，公司端都會計算雇主負擔。</span>
             </div>
           </label>
 
           <details open>
-            <summary>勞健保與勞退設定｜36,300 級距</summary>
+            <summary>勞健保與勞退設定｜預設 36,300 級距</summary>
             <div class="details-body">
               <div class="field">
-                <label for="insuredSalary">投保級距 <span>預設 36300</span></label>
+                <label for="insuredSalary">投保級距 <span>目前預設 36300</span></label>
                 <input id="insuredSalary" type="number" min="0" step="100" value="36300" />
               </div>
 
@@ -542,8 +580,8 @@
                   <input id="employerPension" type="number" min="0" step="1" value="2178" />
                 </div>
                 <div class="field">
-                  <label for="employerOther">其他雇主成本 <span>可填 0 或實際值</span></label>
-                  <input id="employerOther" type="number" min="0" step="1" value="0" />
+                  <label for="employerOccupational">職災等其他雇主成本 <span>可填 0 或實際值</span></label>
+                  <input id="employerOccupational" type="number" min="0" step="1" value="0" />
                 </div>
               </div>
             </div>
@@ -592,15 +630,16 @@
           </div>
 
           <div class="footer">
-            平均實收價格＝帳面單價 × 91%。<br>
-            公司人事成本＝帳面薪資＋雇主勞保＋雇主健保＋雇主勞退＋其他雇主成本。
+            公式：平均實收價格預設＝帳面單價 × 91%，但可以手動覆蓋。<br>
+            員工實拿＝帳面薪資 − 員工勞健保自付額。<br>
+            公司總人事成本＝帳面薪資 ＋ 雇主勞保 ＋ 雇主健保 ＋ 勞退 ＋ 其他雇主成本。
           </div>
         </div>
       </aside>
 
       <section class="card">
         <div class="card-header">
-          <h2>計算結果</h2>
+          <h2>試算結果</h2>
           <p id="summaryText">目前薪資試算結果</p>
         </div>
         <div class="card-body">
@@ -624,11 +663,12 @@
             </div>
 
             <div class="metric danger">
-              <div class="name">公司成本占實收業績</div>
+              <div class="name">公司總人事成本占比</div>
               <div class="value" id="companyCostRatioValue">0%</div>
-              <div class="sub">含雇主勞健保、勞退後的真實成本比例</div>
+              <div class="sub">公司總人事成本 ÷ 實收總業績</div>
             </div>
-          </div>
+
+                      </div>
 
           <div class="cost-breakdown">
             <div class="cost-item">
@@ -636,34 +676,37 @@
               <div class="amount" id="revenueValue">$0</div>
             </div>
             <div class="cost-item">
-              <div class="label">平均實收單價</div>
-              <div class="amount" id="avgPriceValue">$0</div>
-            </div>
-            <div class="cost-item">
-              <div class="label">員工自付額</div>
+              <div class="label">員工勞健保自付</div>
               <div class="amount" id="employeeDeductionValue">$0</div>
             </div>
             <div class="cost-item">
-              <div class="label">雇主負擔</div>
+              <div class="label">雇主勞健保＋勞退負擔</div>
               <div class="amount" id="employerCostOnlyValue">$0</div>
+            </div>
+            <div class="cost-item">
+              <div class="label">公司比帳面薪資多付</div>
+              <div class="amount" id="extraCompanyCostValue">$0</div>
             </div>
           </div>
 
-          <div class="note">
-            <div class="tier-chip" id="tierChip">目前級距</div>
-            <div id="tierDescription"></div>
-            <hr style="border:0;border-top:1px solid #e5e7eb;margin:12px 0;">
-            <strong>下一位病人增加員工帳面薪資：</strong>
-            <span id="nextPatientValue" style="font-size: 22px; font-weight: 950; margin-left: 8px;">$0</span>
-            <div id="nextPatientSub" style="color: var(--muted); margin-top: 4px;"></div>
+          <div class="rule-box">
+            <div class="note">
+              <div class="tier-chip" id="tierChip">目前級距</div>
+              <div id="tierDescription"></div>
+            </div>
+            <div class="note">
+              <strong>下一位病人增加員工帳面薪資：</strong>
+              <div id="nextPatientValue" style="font-size: 28px; font-weight: 950; margin-top: 6px;">$0</div>
+              <div id="nextPatientSub" style="color: var(--muted); margin-top: 4px;"></div>
+            </div>
           </div>
 
           <div class="chart-card">
             <div class="chart-title">
-              <span>帳面薪資與公司實際人事成本</span>
+              <span>薪資與公司成本曲線</span>
               <div class="legend">
                 <span style="color:#2563eb;"><i></i>帳面薪資</span>
-                <span style="color:#d97706;"><i></i>公司成本</span>
+                <span style="color:#d97706;"><i></i>公司總成本</span>
               </div>
             </div>
             <canvas id="salaryChart" width="900" height="340"></canvas>
@@ -704,7 +747,7 @@
       employerLabor: $("employerLabor"),
       employerHealth: $("employerHealth"),
       employerPension: $("employerPension"),
-      employerOther: $("employerOther"),
+      employerOccupational: $("employerOccupational"),
       baseSalary: $("baseSalary"),
       targetBonus: $("targetBonus"),
       targetCount: $("targetCount"),
@@ -717,6 +760,7 @@
     const outputs = {
       countDisplay: $("countDisplay"),
       summaryText: $("summaryText"),
+      avgPriceHint: $("avgPriceHint"),
       grossSalaryValue: $("grossSalaryValue"),
       grossSalarySub: $("grossSalarySub"),
       employeeNetCard: $("employeeNetCard"),
@@ -726,9 +770,9 @@
       companyCostSub: $("companyCostSub"),
       companyCostRatioValue: $("companyCostRatioValue"),
       revenueValue: $("revenueValue"),
-      avgPriceValue: $("avgPriceValue"),
       employeeDeductionValue: $("employeeDeductionValue"),
       employerCostOnlyValue: $("employerCostOnlyValue"),
+      extraCompanyCostValue: $("extraCompanyCostValue"),
       tierChip: $("tierChip"),
       tierDescription: $("tierDescription"),
       nextPatientValue: $("nextPatientValue"),
@@ -754,14 +798,18 @@
       return (value * 100).toFixed(1) + "%";
     }
 
-    function getConfig() {
-      const price = Math.max(0, num(inputs.price.value));
-      const avgPrice = Math.round(price * 0.91);
-      inputs.avgPrice.value = avgPrice;
+    function defaultAvgPriceFromPrice() {
+      return Math.round(Math.max(0, num(inputs.price.value)) * 0.91);
+    }
 
+    function applyDefaultAvgPrice() {
+      inputs.avgPrice.value = defaultAvgPriceFromPrice();
+    }
+
+    function getConfig() {
       return {
-        price,
-        avgPrice,
+        price: Math.max(0, num(inputs.price.value)),
+        avgPrice: Math.max(0, num(inputs.avgPrice.value)),
         count: Math.max(0, Math.round(num(inputs.countNumber.value))),
         showEmployeeNet: inputs.showEmployeeNet.checked,
         insuredSalary: Math.max(0, num(inputs.insuredSalary.value)),
@@ -770,7 +818,7 @@
         employerLabor: Math.max(0, num(inputs.employerLabor.value)),
         employerHealth: Math.max(0, num(inputs.employerHealth.value)),
         employerPension: Math.max(0, num(inputs.employerPension.value)),
-        employerOther: Math.max(0, num(inputs.employerOther.value)),
+        employerOccupational: Math.max(0, num(inputs.employerOccupational.value)),
         baseSalary: Math.max(0, num(inputs.baseSalary.value)),
         targetBonus: Math.max(0, num(inputs.targetBonus.value)),
         targetCount: Math.max(0, Math.round(num(inputs.targetCount.value))),
@@ -783,9 +831,12 @@
 
     function getInsuranceCost(config) {
       const employeeDeduction = config.employeeLabor + config.employeeHealth;
-      const employerCost = config.employerLabor + config.employerHealth + config.employerPension + config.employerOther;
+      const employerCost = config.employerLabor + config.employerHealth + config.employerPension + config.employerOccupational;
 
-      return { employeeDeduction, employerCost };
+      return {
+        employeeDeduction,
+        employerCost
+      };
     }
 
     function extraPayForNthExtraPatient(extraIndex, config) {
@@ -828,7 +879,7 @@
       if (patientCount < config.targetCount) {
         return {
           title: "未達標",
-          description: `目前 ${patientCount} 人次，未達 ${config.targetCount} 人次。員工帳面薪資為底薪 ${money(config.baseSalary)}；公司端另加雇主負擔 ${money(getInsuranceCost(config).employerCost)}。`,
+          description: `目前為 ${patientCount} 人次，未達 ${config.targetCount} 人次。員工帳面薪資為底薪 ${money(config.baseSalary)}，但公司成本會再加上雇主負擔。`,
           nextPay: patientCount + 1 === config.targetCount ? config.targetBonus : 0,
           nextText: patientCount + 1 === config.targetCount
             ? `下一人次達標，帳面薪資增加達標獎金 ${money(config.targetBonus)}。`
@@ -862,7 +913,7 @@
           目前在 ${tierStart}–${tierEnd} 人次級距。<br>
           這一階每多 1 人次增加帳面薪資：${money(config.price)} × ${(config.commissionRate * 100).toFixed(0)}% ＋ ${money(tierIndex * config.tierIncrease)}
           ＝ <strong>${money(currentPay)}</strong>。<br>
-          實收單價固定用 ${money(config.avgPrice)}，也就是帳面價格的 91%。
+          注意：公司端另加固定雇主負擔 ${money(getInsuranceCost(config).employerCost)}。
         `,
         nextPay,
         nextText: nextTierIndex > tierIndex
@@ -1057,12 +1108,17 @@
       outputs.grossSalaryValue.textContent = money(result.grossSalary);
       outputs.netSalaryValue.textContent = money(result.netSalary);
       outputs.companyCostValue.textContent = money(result.companyCost);
+      outputs.revenueValue.textContent = money(result.revenue);
+
       outputs.companyCostRatioValue.textContent = percent(companyCostRatio);
 
-      outputs.revenueValue.textContent = money(result.revenue);
-      outputs.avgPriceValue.textContent = money(config.avgPrice);
+      const avgRatio = config.price > 0 ? config.avgPrice / config.price : 0;
+      outputs.avgPriceHint.textContent =
+        `目前約為帳面單價的 ${percent(avgRatio)}；91%預設值為 ${money(config.price * 0.91)}`;
+
       outputs.employeeDeductionValue.textContent = money(result.employeeDeduction);
       outputs.employerCostOnlyValue.textContent = money(result.employerCost);
+      outputs.extraCompanyCostValue.textContent = money(result.employerCost);
 
       outputs.grossSalarySub.textContent =
         `底薪 ${money(config.baseSalary)}＋達標獎金 ${money(result.targetBonus)}＋分段抽成 ${money(result.extraCommission)}`;
@@ -1074,7 +1130,7 @@
         `帳面薪資 ${money(result.grossSalary)}＋雇主負擔 ${money(result.employerCost)}`;
 
       outputs.summaryText.textContent =
-        `${config.count} 人次｜帳面單價 ${money(config.price)}｜平均實收 ${money(config.avgPrice)}｜公司成本占實收業績 ${percent(companyCostRatio)}`;
+        `${config.count} 人次｜帳面單價 ${money(config.price)}｜平均實收 ${money(config.avgPrice)}｜公司總人事成本 ${money(result.companyCost)}，占實收總業績 ${percent(companyCostRatio)}。`;
 
       outputs.tierChip.textContent = tier.title;
       outputs.tierDescription.innerHTML = tier.description;
@@ -1085,13 +1141,29 @@
       drawChart(config);
     }
 
+    let avgPriceWasDefault = true;
+
+    inputs.price.addEventListener("input", () => {
+      if (avgPriceWasDefault) {
+        applyDefaultAvgPrice();
+      }
+      update();
+    });
+
+    inputs.avgPrice.addEventListener("input", () => {
+      const current = Math.round(num(inputs.avgPrice.value));
+      const defaultValue = defaultAvgPriceFromPrice();
+      avgPriceWasDefault = Math.abs(current - defaultValue) <= 1;
+      update();
+    });
+
     inputs.count.addEventListener("input", () => {
       inputs.countNumber.value = inputs.count.value;
       update();
     });
 
     Object.values(inputs).forEach((input) => {
-      if (input.id !== "count") {
+      if (!["count", "price", "avgPrice"].includes(input.id)) {
         input.addEventListener("input", update);
         input.addEventListener("change", update);
       }
@@ -1109,7 +1181,7 @@
       inputs.employerLabor.value = 3176;
       inputs.employerHealth.value = 1757;
       inputs.employerPension.value = 2178;
-      inputs.employerOther.value = 0;
+      inputs.employerOccupational.value = 0;
       inputs.baseSalary.value = 35000;
       inputs.targetBonus.value = 10000;
       inputs.targetCount.value = 60;
@@ -1117,6 +1189,7 @@
       inputs.commissionRate.value = 50;
       inputs.tierIncrease.value = 50;
       inputs.maxCount.value = 200;
+      avgPriceWasDefault = true;
       update();
     });
 
@@ -1126,17 +1199,18 @@
       const companyCostRatio = result.revenue > 0 ? result.companyCost / result.revenue : 0;
 
       const text = [
-        "動態薪資試算結果｜含勞健保成本",
+        "動態薪資試算結果｜36300級距｜平均實收可調",
         `人次：${config.count}`,
-        `帳面單一病患價格：${money(config.price)}`,
-        `平均實收單價：${money(config.avgPrice)}（帳面價格 × 91%）`,
+        `帳面單一病人價格：${money(config.price)}`,
+        `平均病患實收價格：${money(config.avgPrice)}（目前約為帳面單價的 ${percent(config.price > 0 ? config.avgPrice / config.price : 0)}）`,
+        `帳面總額：${money(config.count * config.price)}`,
         `實收總業績：${money(result.revenue)}`,
         `員工帳面薪資：${money(result.grossSalary)}`,
-        `員工自付額：${money(result.employeeDeduction)}`,
+        `員工勞健保自付額：${money(result.employeeDeduction)}`,
         `員工實拿薪資：${money(result.netSalary)}`,
         `雇主負擔：${money(result.employerCost)}`,
         `公司實際人事成本：${money(result.companyCost)}`,
-        `公司成本占實收業績：${percent(companyCostRatio)}`,
+        `公司總人事成本占實收總業績：${percent(companyCostRatio)}`,
         `投保級距：${money(config.insuredSalary)}`
       ].join("\n");
 
@@ -1147,6 +1221,12 @@
       } catch (error) {
         alert(text);
       }
+    });
+
+
+    $("resetAvgPriceBtn").addEventListener("click", () => {
+      applyDefaultAvgPrice();
+      update();
     });
 
     update();
