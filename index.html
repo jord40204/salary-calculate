@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>動態薪資試算器｜時數比例滑桿版v9</title>
+  <title>動態薪資試算器｜時數比例0.5-1版</title>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -503,10 +502,10 @@
         <h1>動態薪資試算器</h1>
         <p>
           薪資抽成用帳面單價計算，平均實收預設帶入帳面單價的 91%，也可以手動修改。<br>
-          可用滑桿調整總時數比例 0.6–1.0；底薪、達標人次、每階級距與達標獎金會依比例降低，抽成率維持原規則。
+          可用滑桿調整總時數比例 0.5–1.0；底薪、達標人次、每階級距與達標獎金會依比例降低，抽成率維持原規則。
         </p>
       </div>
-      <div class="badge">時數比例滑桿｜0.6–1.0｜達標獎金隨比例</div>
+      <div class="badge">時數比例滑桿｜0.5–1.0｜達標獎金隨比例</div>
     </section>
 
     <section class="grid">
@@ -543,7 +542,7 @@
           </div>
 
           <div class="field">
-            <label for="workRatioSlider">總時數比例 <span>滑桿範圍 0.6–1.0</span></label>
+            <label for="workRatioSlider">總時數比例 <span>滑桿範圍 0.5–1.0</span></label>
             <div class="ratio-slider-card">
               <div class="ratio-slider-top">
                 <div>
@@ -555,8 +554,9 @@
                   <small>倍</small>
                 </div>
               </div>
-              <input id="workRatioSlider" type="range" min="0.6" max="1" step="0.01" value="1" />
+              <input id="workRatioSlider" type="range" min="0.5" max="1" step="0.01" value="1" />
               <div class="ratio-scale">
+                <span>0.5</span>
                 <span>0.6</span>
                 <span>0.7</span>
                 <span>0.8</span>
@@ -658,7 +658,7 @@
 
           <div class="footer">
             公式：平均實收價格預設＝帳面單價 × 91%，但可以手動覆蓋。<br>
-            時數比例滑桿範圍固定 0.6–1.0；縮放底薪、達標人次、每階人次與達標獎金；抽成率與每階加給維持原設定。<br>
+            時數比例滑桿範圍固定 0.5–1.0；縮放底薪、達標人次、每階人次與達標獎金；抽成率與每階加給維持原設定。<br>
             公司總人事成本＝帳面薪資 ＋ 雇主勞保 ＋ 雇主健保 ＋ 勞退 ＋ 其他雇主成本。
           </div>
         </div>
@@ -845,7 +845,7 @@
     }
 
     function getConfig() {
-      const ratio = Math.max(0.6, Math.min(1, num(inputs.workRatioSlider.value, 1)));
+      const ratio = Math.max(0.5, Math.min(1, num(inputs.workRatioSlider.value, 1)));
 
       const originalBaseSalary = Math.max(0, num(inputs.baseSalary.value));
       const originalTargetBonus = Math.max(0, num(inputs.targetBonus.value));
