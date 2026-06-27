@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>動態薪資試算器｜時數比例滑桿版</title>
+  <title>動態薪資試算器｜時數比例滑桿版v9</title>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -503,17 +503,17 @@
         <h1>動態薪資試算器</h1>
         <p>
           薪資抽成用帳面單價計算，平均實收預設帶入帳面單價的 91%，也可以手動修改。<br>
-          可用滑桿調整總時數比例 0.6–1.0；底薪、達標人次與每階級距會依比例降低，達標獎金與抽成率維持原規則。
+          可用滑桿調整總時數比例 0.6–1.0；底薪、達標人次、每階級距與達標獎金會依比例降低，抽成率維持原規則。
         </p>
       </div>
-      <div class="badge">時數比例滑桿｜0.6–1.0｜抽成規則不打折</div>
+      <div class="badge">時數比例滑桿｜0.6–1.0｜達標獎金隨比例</div>
     </section>
 
     <section class="grid">
       <aside class="card">
         <div class="card-header">
           <h2>輸入條件</h2>
-          <p>帳面單價用來算薪資抽成；時數比例只降低底薪、達標人次與每階級距，達標獎金與抽成率不打折。</p>
+          <p>帳面單價用來算薪資抽成；時數比例會降低底薪、達標人次、每階級距與達標獎金，抽成率與每階加給不打折。</p>
         </div>
         <div class="card-body">
           <div class="field">
@@ -548,7 +548,7 @@
               <div class="ratio-slider-top">
                 <div>
                   <strong>目前時數比例</strong>
-                  <div style="color: var(--muted); font-size: 12px; margin-top: 4px;">只影響底薪、達標人次與每階級距</div>
+                  <div style="color: var(--muted); font-size: 12px; margin-top: 4px;">影響底薪、達標人次、每階級距與達標獎金</div>
                 </div>
                 <div class="ratio-slider-value">
                   <span id="workRatioDisplay">1.00</span>
@@ -565,7 +565,7 @@
               </div>
             </div>
             <div class="ratio-summary" id="workRatioSummary">
-              目前為 1 倍規則：底薪 35,000、達標 60 人、每階 20 人；達標獎金 10,000 與抽成規則固定。
+              目前為 1 倍規則：底薪 35,000、達標 60 人、每階 20 人、達標獎金 10,000；抽成率與每階加給固定。
             </div>
           </div>
 
@@ -658,7 +658,7 @@
 
           <div class="footer">
             公式：平均實收價格預設＝帳面單價 × 91%，但可以手動覆蓋。<br>
-            時數比例滑桿範圍固定 0.6–1.0；只縮放底薪、達標人次、每階人次；達標獎金、抽成率與每階加給維持原設定。<br>
+            時數比例滑桿範圍固定 0.6–1.0；縮放底薪、達標人次、每階人次與達標獎金；抽成率與每階加給維持原設定。<br>
             公司總人事成本＝帳面薪資 ＋ 雇主勞保 ＋ 雇主健保 ＋ 勞退 ＋ 其他雇主成本。
           </div>
         </div>
@@ -877,7 +877,7 @@
         originalTierIncrease,
 
         baseSalary: Math.round(originalBaseSalary * ratio),
-        targetBonus: originalTargetBonus,
+        targetBonus: Math.round(originalTargetBonus * ratio),
         targetCount: Math.max(1, Math.round(originalTargetCount * ratio)),
         tierSize: Math.max(1, Math.round(originalTierSize * ratio)),
         commissionRate: originalCommissionRate,
@@ -971,7 +971,7 @@
           目前在 ${tierStart}–${tierEnd} 人次級距。<br>
           這一階每多 1 人次增加帳面薪資：${money(config.price)} × ${(config.commissionRate * 100).toFixed(1)}% ＋ ${money(tierIndex * config.tierIncrease)}
           ＝ <strong>${money(currentPay)}</strong>。<br>
-          目前時數比例 ${config.workRatio}，只調整底薪、達標人次與每階級距；抽成率維持 ${(config.commissionRate * 100).toFixed(1)}%，每階加給維持 ${money(config.tierIncrease)}。<br>
+          目前時數比例 ${config.workRatio}，會調整底薪、達標人次、每階級距與達標獎金；抽成率維持 ${(config.commissionRate * 100).toFixed(1)}%，每階加給維持 ${money(config.tierIncrease)}。<br>
           注意：公司端另加固定雇主負擔 ${money(getInsuranceCost(config).employerCost)}。
         `,
         nextPay,
@@ -1194,14 +1194,14 @@
 
       outputs.workRatioValue.textContent = config.workRatio.toFixed(1);
       outputs.workRatioMetricSub.textContent =
-        `達標人次 ${config.targetCount}｜底薪 ${money(config.baseSalary)}｜獎金固定 ${money(config.targetBonus)}`;
+        `達標人次 ${config.targetCount}｜底薪 ${money(config.baseSalary)}｜達標獎金 ${money(config.targetBonus)}`;
 
       outputs.workRatioSummary.innerHTML =
-        `目前為 <strong>${config.workRatio.toFixed(1)}</strong> 倍規則：
+        `目前為 <strong>${config.workRatio.toFixed(2)}</strong> 倍規則：
          底薪 ${money(config.originalBaseSalary)} → <strong>${money(config.baseSalary)}</strong>，
          達標人次 ${config.originalTargetCount} → <strong>${config.targetCount}</strong>，
-         每階 ${config.originalTierSize} 人 → <strong>${config.tierSize}</strong> 人。<br>
-         <strong>達標獎金固定 ${money(config.targetBonus)}</strong>，
+         每階 ${config.originalTierSize} 人 → <strong>${config.tierSize}</strong> 人，
+         達標獎金 ${money(config.originalTargetBonus)} → <strong>${money(config.targetBonus)}</strong>。<br>
          <strong>抽成率固定 ${(config.commissionRate * 100).toFixed(0)}%</strong>，
          <strong>每階加給固定 ${money(config.tierIncrease)}</strong>。`;
 
@@ -1278,7 +1278,7 @@
         `人次：${config.count}`,
         `有效達標人次：${config.targetCount}`,
         `有效底薪：${money(config.baseSalary)}`,
-        `達標獎金固定：${money(config.targetBonus)}`,
+        `有效達標獎金：${money(config.targetBonus)}（原始 ${money(config.originalTargetBonus)} × ${config.workRatio.toFixed(2)}）`,
         `抽成率固定：${(config.commissionRate * 100).toFixed(1)}%`,
         `每階加給固定：${money(config.tierIncrease)}`,
         `有效每階人次：${config.tierSize}`,
